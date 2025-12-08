@@ -69,6 +69,11 @@ bool xmrig::Job::setBlob(const char *blob)
 
     size /= 2;
 
+    // Detect Junocash: 140-byte blob with RandomX algorithm
+    if (size == 140 && m_algorithm.family() == Algorithm::RANDOM_X) {
+        m_isJunocash = true;
+    }
+
     const size_t minSize = nonceOffset() + nonceSize();
     if (size < minSize || size >= sizeof(m_blob)) {
         return false;
@@ -154,6 +159,10 @@ bool xmrig::Job::setTarget(const char *target)
 
 size_t xmrig::Job::nonceOffset() const
 {
+    if (m_isJunocash) {
+        return 108;  // Junocash nonce at bytes 108-139
+    }
+
     switch (algorithm().family()) {
     case Algorithm::KAWPOW:
         return 32;
@@ -232,6 +241,7 @@ void xmrig::Job::copy(const Job &other)
 {
     m_algorithm  = other.m_algorithm;
     m_nicehash   = other.m_nicehash;
+    m_isJunocash = other.m_isJunocash;
     m_size       = other.m_size;
     m_clientId   = other.m_clientId;
     m_id         = other.m_id;
@@ -283,6 +293,7 @@ void xmrig::Job::move(Job &&other)
 {
     m_algorithm  = other.m_algorithm;
     m_nicehash   = other.m_nicehash;
+    m_isJunocash = other.m_isJunocash;
     m_size       = other.m_size;
     m_clientId   = std::move(other.m_clientId);
     m_id         = std::move(other.m_id);

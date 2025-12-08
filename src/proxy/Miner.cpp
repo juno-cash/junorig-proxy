@@ -144,7 +144,13 @@ void xmrig::Miner::setJob(Job &job, int64_t extra_nonce)
 
     if (hasExtension(EXT_NICEHASH)) {
         snprintf(m_sendBuf, 4, "%02hhx", m_fixedByte);
-        memcpy(job.rawBlob() + (job.nonceOffset() + 3) * 2, m_sendBuf, 2);
+        if (job.isJunocash()) {
+            // Junocash: write fixed byte at byte 31 of 32-byte nonce
+            memcpy(job.rawBlob() + (job.nonceOffset() + 31) * 2, m_sendBuf, 2);
+        } else {
+            // Standard: write fixed byte at byte 3 of 4-byte nonce
+            memcpy(job.rawBlob() + (job.nonceOffset() + 3) * 2, m_sendBuf, 2);
+        }
     }
 
     m_diff = job.diff();

@@ -49,6 +49,18 @@ xmrig::JobResult::JobResult(int64_t id, const char *jobId, const char *nonce, co
 
 bool xmrig::JobResult::isCompatible(uint8_t fixedByte) const
 {
+    const size_t nonceLen = strlen(nonce);
+
+    if (nonceLen == 64) {
+        // Junocash 32-byte nonce: check byte 31 (hex chars 62-63)
+        uint8_t n;
+        if (!Cvt::fromHex(&n, 1, nonce + 62, 2)) {
+            return false;
+        }
+        return n == fixedByte;
+    }
+
+    // Standard 4-byte nonce: check byte 3 (MSB)
     uint8_t n[4];
     if (!Cvt::fromHex(n, sizeof(n), nonce, 8)) {
         return false;
@@ -64,5 +76,11 @@ bool xmrig::JobResult::isValid() const
         return false;
     }
 
-    return strlen(nonce) == 8 && !jobId.isNull();
+    const size_t nonceLen = strlen(nonce);
+    // Allow 8-char (standard 4-byte) or 64-char (Junocash 32-byte) nonces
+    if (nonceLen != 8 && nonceLen != 64) {
+        return false;
+    }
+
+    return !jobId.isNull();
 }
