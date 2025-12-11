@@ -52,11 +52,11 @@ jobs:
       matrix:
         include:
           - arch: x64
-            msvc_arch: x64
-            triplet: x64-windows-static
+            msystem: UCRT64
+            prefix: ucrt64
           - arch: x86
-            msvc_arch: Win32
-            triplet: x86-windows-static
+            msystem: MINGW32
+            prefix: mingw32
 
     steps:
       - name: Checkout
@@ -64,20 +64,33 @@ jobs:
         with:
           submodules: true
 
-      - name: Install dependencies
-        run: |
-          vcpkg install libuv:${{ matrix.triplet }} openssl:${{ matrix.triplet }}
+      - name: Setup MSYS2
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: ${{ matrix.msystem }}
+          update: true
+          install: >-
+            base-devel
+            git
+            mingw-w64-${{ matrix.prefix == 'ucrt64' && 'ucrt-x86_64' || 'i686' }}-toolchain
+            mingw-w64-${{ matrix.prefix == 'ucrt64' && 'ucrt-x86_64' || 'i686' }}-cmake
+            mingw-w64-${{ matrix.prefix == 'ucrt64' && 'ucrt-x86_64' || 'i686' }}-openssl
+            mingw-w64-${{ matrix.prefix == 'ucrt64' && 'ucrt-x86_64' || 'i686' }}-libuv
 
       - name: Build
+        shell: msys2 {0}
         run: |
-          cmake -G "Visual Studio 17 2022" -A ${{ matrix.msvc_arch }} -B build -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_INSTALLATION_ROOT\scripts\buildsystems\vcpkg.cmake" -DVCPKG_TARGET_TRIPLET=${{ matrix.triplet }}
-          cmake --build build --config Release
+          mkdir build && cd build
+          cmake .. -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release
+          make -j$(nproc)
 
       - name: Prepare artifacts
+        shell: msys2 {0}
         run: |
-          New-Item -ItemType Directory -Force -Path artifacts
-          Copy-Item build\Release\xmrig-proxy.exe artifacts\
-          Copy-Item src\config.json artifacts\
+          mkdir -p artifacts
+          cp build/xmrig-proxy.exe artifacts/
+          cp src/config.json artifacts/
+          strip artifacts/xmrig-proxy.exe
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
