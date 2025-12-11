@@ -53,8 +53,10 @@ jobs:
         include:
           - arch: x64
             msvc_arch: x64
+            triplet: x64-windows-static
           - arch: x86
             msvc_arch: Win32
+            triplet: x86-windows-static
 
     steps:
       - name: Checkout
@@ -62,14 +64,13 @@ jobs:
         with:
           submodules: true
 
-      - name: Download dependencies
+      - name: Install dependencies
         run: |
-          Invoke-WebRequest -Uri "https://github.com/xmrig/xmrig-deps/releases/download/v6.6/xmrig-deps-6.6-msvc2022-${{ matrix.arch }}.zip" -OutFile deps.zip
-          Expand-Archive -Path deps.zip -DestinationPath .
+          vcpkg install libuv:${{ matrix.triplet }} openssl:${{ matrix.triplet }}
 
       - name: Build
         run: |
-          cmake -G "Visual Studio 17 2022" -A ${{ matrix.msvc_arch }} -B build -DXMRIG_DEPS="${{ github.workspace }}\xmrig-deps-6.6-msvc2022-${{ matrix.arch }}"
+          cmake -G "Visual Studio 17 2022" -A ${{ matrix.msvc_arch }} -B build -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_INSTALLATION_ROOT\scripts\buildsystems\vcpkg.cmake" -DVCPKG_TARGET_TRIPLET=${{ matrix.triplet }}
           cmake --build build --config Release
 
       - name: Prepare artifacts
