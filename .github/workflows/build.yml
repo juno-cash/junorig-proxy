@@ -1,0 +1,172 @@
+name: Build
+
+on:
+  push:
+    branches: [master, feature/*]
+    tags:
+      - v*
+  pull_request:
+    branches: [master]
+  workflow_dispatch:
+
+jobs:
+  build-linux:
+    name: Linux (x64)
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake build-essential libssl-dev libuv1-dev
+
+      - name: Build
+        run: |
+          mkdir build && cd build
+          cmake .. -DCMAKE_BUILD_TYPE=Release
+          make -j$(nproc)
+
+      - name: Prepare artifacts
+        run: |
+          mkdir -p artifacts
+          cp build/xmrig-proxy artifacts/
+          cp src/config.json artifacts/
+          strip artifacts/xmrig-proxy
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: xmrig-proxy-linux-x64
+          path: artifacts/
+
+  build-windows:
+    name: Windows (${{ matrix.arch }})
+    runs-on: windows-2022
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x64
+            msystem: UCRT64
+            prefix: ucrt64
+          - arch: x86
+            msystem: MINGW32
+            prefix: mingw32
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Setup MSYS2
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: ${{ matrix.msystem }}
+          update: true
+          install: >-
+            base-devel
+            git
+            mingw-w64-${{ matrix.prefix == 'ucrt64' && 'ucrt-x86_64' || 'i686' }}-toolchain
+            mingw-w64-${{ matrix.prefix == 'ucrt64' && 'ucrt-x86_64' || 'i686' }}-cmake
+            mingw-w64-${{ matrix.prefix == 'ucrt64' && 'ucrt-x86_64' || 'i686' }}-openssl
+            mingw-w64-${{ matrix.prefix == 'ucrt64' && 'ucrt-x86_64' || 'i686' }}-libuv
+
+      - name: Build
+        shell: msys2 {0}
+        run: |
+          mkdir build && cd build
+          cmake .. -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release
+          make -j$(nproc)
+
+      - name: Prepare artifacts
+        shell: msys2 {0}
+        run: |
+          mkdir -p artifacts
+          cp build/xmrig-proxy.exe artifacts/
+          cp src/config.json artifacts/
+          strip artifacts/xmrig-proxy.exe
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: xmrig-proxy-windows-${{ matrix.arch }}
+          path: artifacts/
+
+  build-macos:
+    name: macOS (arm64)
+    runs-on: macos-14
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Install dependencies
+        run: |
+          brew install cmake libuv openssl@3
+
+      - name: Build
+        run: |
+          mkdir build && cd build
+          cmake .. \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DOPENSSL_ROOT_DIR=$(brew --prefix openssl@3)
+          make -j$(sysctl -n hw.logicalcpu)
+
+      - name: Prepare artifacts
+        run: |
+          mkdir -p artifacts
+          cp build/xmrig-proxy artifacts/
+          cp src/config.json artifacts/
+          strip artifacts/xmrig-proxy
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: xmrig-proxy-macos-arm64
+          path: artifacts/
+
+  release:
+    name: Create Release
+    needs: [build-linux, build-windows, build-macos]
+    runs-on: ubuntu-22.04
+    if: startsWith(github.ref, 'refs/tags/v')
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Create archives
+        run: |
+          cd artifacts
+          for dir in */; do
+            name="${dir%/}"
+            cd "$name"
+            if [[ "$name" == *"windows"* ]]; then
+              zip -r "../${name}.zip" .
+            else
+              tar -czvf "../${name}.tar.gz" .
+            fi
+            cd ..
+          done
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            artifacts/*.tar.gz
+            artifacts/*.zip
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
