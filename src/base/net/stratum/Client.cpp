@@ -370,7 +370,9 @@ bool xmrig::Client::parseJob(const rapidjson::Value &params, int *code)
 
     const char *algo = Json::getString(params, "algo");
     const char *blobData = Json::getString(params, "blob");
-    if (algo) {
+    // For RX_JUNO pools, the pool may send algo: rx/0 in its response, but we should
+    // use the configured rx/juno algorithm since that's what we want to mine.
+    if (algo && m_pool.algorithm() != Algorithm::RX_JUNO) {
         job.setAlgorithm(algo);
     }
     else if (m_pool.coin().isValid()) {

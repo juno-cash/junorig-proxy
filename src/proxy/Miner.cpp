@@ -128,12 +128,8 @@ void xmrig::Miner::forwardJob(const Job &job, const char *algo)
     m_diff = job.diff();
     setFixedByte(job.fixedByte());
 
-    // For RX_JUNO (Zcash-style), use mining.notify format
-    if (job.algorithm() == Algorithm::RX_JUNO) {
-        sendMiningNotify(job, false);
-        return;
-    }
-
+    // For RX_JUNO, use standard job format with blob since the pool sends blobs, not mining.notify
+    // The miner can handle standard job format for rx/juno
     sendJob(job.rawBlob(), job.id().data(), job.rawTarget(), algo ? algo : job.algorithm().name(), job.height(), job.rawSeedHash(), job.rawSigKey());
 }
 
@@ -148,19 +144,8 @@ void xmrig::Miner::setJob(Job &job, int64_t extra_nonce)
 {
     using namespace rapidjson;
 
-    // For RX_JUNO (Zcash-style), use mining.notify format
-    if (job.algorithm() == Algorithm::RX_JUNO) {
-        m_diff = job.diff();
-
-        // Send login response first if this is the first job
-        if (m_state == WaitReadyState) {
-            sendLoginResponseOnly();
-        }
-
-        // Send mining.notify with the job
-        sendMiningNotify(job, false);
-        return;
-    }
+    // For RX_JUNO, use standard job format with blob since pools send blobs, not mining.notify
+    // The miner can handle standard job format for rx/juno
 
     if (hasExtension(EXT_NICEHASH)) {
         snprintf(m_sendBuf, 4, "%02hhx", m_fixedByte);
@@ -277,7 +262,9 @@ bool xmrig::Miner::parseRequest(int64_t id, const char *method, const rapidjson:
         if (!event->request.isValid() || event->request.actualDiff() < diff()) {
             event->setError(Error::LowDifficulty);
         }
-        else if (hasExtension(EXT_NICEHASH) && !event->request.isCompatible(m_fixedByte)) {
+        // For RX_JUNO, skip NiceHash nonce compatibility check since the miner constructs
+        // its own nonce from mining.notify params without the fixed byte embedded in blob.
+        else if (hasExtension(EXT_NICEHASH) && algorithm != Algorithm::RX_JUNO && !event->request.isCompatible(m_fixedByte)) {
             event->setError(Error::InvalidNonce);
         }
 
