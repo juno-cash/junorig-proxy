@@ -1,10 +1,4 @@
-# XMRig Proxy
-[![Github All Releases](https://img.shields.io/github/downloads/xmrig/xmrig-proxy/total.svg)](https://github.com/xmrig/xmrig-proxy/releases)
-[![GitHub release](https://img.shields.io/github/release/xmrig/xmrig-proxy/all.svg)](https://github.com/xmrig/xmrig-proxy/releases)
-[![GitHub Release Date](https://img.shields.io/github/release-date-pre/xmrig/xmrig-proxy.svg)](https://github.com/xmrig/xmrig-proxy/releases)
-[![GitHub license](https://img.shields.io/github/license/xmrig/xmrig-proxy.svg)](https://github.com/xmrig/xmrig-proxy/blob/master/LICENSE)
-[![GitHub stars](https://img.shields.io/github/stars/xmrig/xmrig-proxy.svg)](https://github.com/xmrig/xmrig-proxy/stargazers)
-[![GitHub forks](https://img.shields.io/github/forks/xmrig/xmrig-proxy.svg)](https://github.com/xmrig/xmrig-proxy/network)
+# Juno XMRig Proxy
 
 This is an extremely high-performance proxy for the CryptoNote stratum protocol (including Monero and others).
 It can efficiently manage over 100K connections on an inexpensive, low-memory virtual machine (with just 1024 MB of RAM).
@@ -17,11 +11,6 @@ Compatible with any pool and any miner that supports NiceHash.
 ## Why?
 This proxy is designed to handle donation traffic from XMRig. No other solution works well with high connection and disconnection rates.
 
-## Download
-* Binary releases: https://github.com/xmrig/xmrig-proxy/releases
-* Git tree: https://github.com/xmrig/xmrig-proxy.git
-  * Clone with `git clone https://github.com/xmrig/xmrig-proxy.git` :hammer: [Build instructions](https://xmrig.com/docs/proxy).
-  
 ## Usage
 :boom: If you are using Linux and need to manage over **1000 connections**, you must [increase the limits on open files](https://github.com/xmrig/xmrig-proxy/wiki/Ubuntu-setup).
   
@@ -114,10 +103,12 @@ Then point your [juno-xmrig](https://github.com/user/juno-xmrig) miners at the p
 
 ### Solo/Daemon Mining
 
+See the dedicated document on [solo mining](docs/SOLO_MINING.dm). 
+
 For solo mining, the proxy connects directly to a Juno node's RPC interface:
 
 ```bash
-./xmrig-proxy -o 127.0.0.1:28285 --daemon -a rx/juno -u rpcuser -p rpcpass -b 0.0.0.0:3334
+./xmrig-proxy -o 127.0.0.1:8232 --daemon -a rx/juno -u rpcuser -p rpcpass -b 0.0.0.0:3334
 ```
 
 **Important:** In daemon mode, `-u` and `-p` are RPC authentication credentials, not wallet addresses. The mining reward address is configured on the Juno daemon itself (via `-mineraddress` or config file).
@@ -135,7 +126,7 @@ Optional: Enable ZMQ for faster block notifications:
 junod -zmqpubhashblock=tcp://0.0.0.0:28332 ...
 
 # On the proxy
-./xmrig-proxy -o 127.0.0.1:28285 --daemon --daemon-zmq-port=28332 -a rx/juno -b 0.0.0.0:3334
+./xmrig-proxy -o 127.0.0.1:8232 --daemon --daemon-zmq-port=28332 -a rx/juno -b 0.0.0.0:3334
 ```
 
 ### Proxy Modes
