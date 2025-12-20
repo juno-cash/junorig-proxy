@@ -147,11 +147,14 @@ void xmrig::Miner::setJob(Job &job, int64_t extra_nonce)
     // For RX_JUNO, use standard job format with blob since pools send blobs, not mining.notify
     // The miner can handle standard job format for rx/juno
 
-    if (hasExtension(EXT_NICEHASH)) {
+    // For RX_JUNO stratum, don't modify the blob with fixed byte because:
+    // 1. Pool verifies hash against original blob from mining.notify
+    // 2. Modifying blob would cause hash verification to fail at pool
+    // For other algorithms, embed fixed byte in nonce area for miner identification
+    if (hasExtension(EXT_NICEHASH) && job.algorithm() != Algorithm::RX_JUNO) {
         snprintf(m_sendBuf, 4, "%02hhx", m_fixedByte);
-        // For RX_JUNO with 32-byte nonce, set fixed byte at position 7 (8th byte)
-        // For standard 4-byte nonce, set at position 3 (4th byte)
-        const size_t fixedByteOffset = (job.algorithm() == Algorithm::RX_JUNO) ? 7 : 3;
+        // Standard 4-byte nonce: set fixed byte at position 3 (4th byte)
+        const size_t fixedByteOffset = 3;
         memcpy(job.rawBlob() + (job.nonceOffset() + fixedByteOffset) * 2, m_sendBuf, 2);
     }
 

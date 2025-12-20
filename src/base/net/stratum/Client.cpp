@@ -217,6 +217,7 @@ int64_t xmrig::Client::submit(const JobResult &result)
     params.AddMember("nonce",  StringRef(nonce), allocator);
     params.AddMember("result", StringRef(data), allocator);
 
+
 #   ifndef XMRIG_PROXY_PROJECT
     if (result.minerSignature()) {
         params.AddMember("sig", StringRef(signature), allocator);

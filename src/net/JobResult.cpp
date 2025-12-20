@@ -55,11 +55,20 @@ bool xmrig::JobResult::isCompatible(uint8_t fixedByte) const
 
     const size_t nonceLen = strlen(nonce);
 
-    // For 32-byte nonces (rx/juno), check byte 7 (8th byte) for miner ID
+    // For 32-byte nonces (rx/juno daemon), check byte 7 (8th byte) for miner ID
     // This matches the position set in Miner::setJob() for RX_JUNO
     if (nonceLen == 64) {
         uint8_t n[32];
         if (!Cvt::fromHex(n, sizeof(n), nonce, 64)) {
+            return false;
+        }
+        return n[7] == fixedByte;
+    }
+
+    // For 8-byte nonces (rx/juno stratum), check byte 7 (8th byte) for miner ID
+    if (nonceLen == 16) {
+        uint8_t n[8];
+        if (!Cvt::fromHex(n, sizeof(n), nonce, 16)) {
             return false;
         }
         return n[7] == fixedByte;
@@ -86,8 +95,11 @@ bool xmrig::JobResult::isValid() const
 
     const size_t nonceLen = strlen(nonce);
 
-    // rx/juno uses 32-byte nonces (64 hex chars), others use 4-byte (8 hex chars)
-    if (nonceLen != 8 && nonceLen != 64) {
+    // Valid nonce lengths:
+    // - 8 hex chars (4 bytes): standard algorithms
+    // - 16 hex chars (8 bytes): rx/juno stratum
+    // - 64 hex chars (32 bytes): rx/juno daemon/RPC
+    if (nonceLen != 8 && nonceLen != 16 && nonceLen != 64) {
         return false;
     }
 
