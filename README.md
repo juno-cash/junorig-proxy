@@ -103,7 +103,7 @@ Then point your [juno-xmrig](https://github.com/user/juno-xmrig) miners at the p
 
 ### Solo/Daemon Mining
 
-See the dedicated document on [solo mining](docs/SOLO_MINING.dm). 
+See the dedicated document in [doc/SOLO_MINING.md](doc/SOLO_MINING.md). 
 
 For solo mining, the proxy connects directly to a Juno node's RPC interface:
 

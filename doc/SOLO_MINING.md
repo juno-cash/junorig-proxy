@@ -1,14 +1,12 @@
-# Juno Cash Solo Mining Setup
+# Juno Cash Solo Mining Guide
 
-## Architecture
+This guide covers two solo mining setups:
+- **Direct Mining**: Single miner connects directly to the Juno node
+- **Proxy Mining**: Multiple miners connect through xmrig-proxy to a single Juno node
 
-```
-[Juno Node:8232] <--RPC/ZMQ--> [xmrig-proxy:3334] <--stratum--> [miners]
-```
+## Juno Node Setup
 
-juno-xmrig-proxy connects directly to the Juno node via RPC for solo mining.
-
-## 1. Juno Node Setup
+Configure your Juno node with RPC and ZMQ enabled.
 
 `~/.junocash/junocashd.conf`:
 ```ini
@@ -16,28 +14,33 @@ server=1
 rpcuser=YOUR_RPC_USER
 rpcpassword=YOUR_RPC_PASSWORD
 mineraddress=YOUR_JUNO_WALLET_ADDRESS
-zmqpubhashblock=tcp://127.0.0.1:28332
+zmqpubhashblock=tcp://0.0.0.0:28332
 ```
 
-## 2. Stratum Proxy Setup
+| Setting | Purpose |
+|---------|---------|
+| `server=1` | Enables the RPC server |
+| `rpcuser` / `rpcpassword` | RPC authentication credentials |
+| `mineraddress` | Wallet address where block rewards are sent |
+| `zmqpubhashblock` | ZMQ endpoint for instant block notifications (optional but recommended) |
 
-Build:
+Start the node:
 ```bash
-git clone https://github.com/user/juno-xmrig-proxy
-cd juno-xmrig-proxy
-mkdir build && cd build
-cmake .. -DWITH_TLS=ON
-make -j$(nproc)
+junocashd
 ```
 
-Run:
-```bash
-./xmrig-proxy -o 127.0.0.1:8232 --daemon --daemon-zmq-port=28332 -a rx/juno -u YOUR_RPC_USER -p YOUR_RPC_PASSWORD -b 0.0.0.0:3334
+---
+
+## Option A: Direct Mining (Single Miner)
+
+```
+[Juno Node:8232] <--RPC/ZMQ--> [juno-xmrig]
 ```
 
-## 3. Miner Setup
+Best for: Single mining machine connecting directly to your node.
 
-Build:
+### Build juno-xmrig
+
 ```bash
 git clone https://github.com/user/juno-xmrig
 cd juno-xmrig
@@ -46,18 +49,104 @@ cmake ..
 make -j$(nproc)
 ```
 
-Run:
+### Run
+
+With ZMQ (recommended - instant block notifications):
+```bash
+./xmrig -o NODE_IP:8232 --daemon --daemon-zmq-port=28332 -a rx/juno -u RPC_USER -p RPC_PASSWORD
+```
+
+Without ZMQ (polls every 1000ms):
+```bash
+./xmrig -o NODE_IP:8232 --daemon -a rx/juno -u RPC_USER -p RPC_PASSWORD
+```
+
+Example:
+```bash
+./xmrig -o 192.168.0.10:8232 --daemon --daemon-zmq-port=28332 -a rx/juno -u m333 -p easypassword3
+```
+
+---
+
+## Option B: Proxy Mining (Multiple Miners)
+
+```
+[Juno Node:8232] <--RPC/ZMQ--> [juno-xmrig-proxy:3334] <--stratum--> [miners...]
+```
+
+Best for: Mining farms, multiple machines, or when you want to hide RPC credentials from miners.
+
+### Build juno-xmrig-proxy
+
+```bash
+git clone https://github.com/user/juno-xmrig-proxy
+cd juno-xmrig-proxy
+mkdir build && cd build
+cmake .. -DWITH_TLS=ON
+make -j$(nproc)
+```
+
+### Build juno-xmrig (for miners)
+
+```bash
+git clone https://github.com/user/juno-xmrig
+cd juno-xmrig
+mkdir build && cd build
+cmake ..
+make -j$(nproc)
+```
+
+### Run the Proxy
+
+With ZMQ (recommended):
+```bash
+./xmrig-proxy -o NODE_IP:8232 --daemon --daemon-zmq-port=28332 -a rx/juno -u RPC_USER -p RPC_PASSWORD -b 0.0.0.0:3334
+```
+
+Without ZMQ:
+```bash
+./xmrig-proxy -o NODE_IP:8232 --daemon -a rx/juno -u RPC_USER -p RPC_PASSWORD -b 0.0.0.0:3334
+```
+
+Example:
+```bash
+./xmrig-proxy -o 192.168.0.10:8232 --daemon --daemon-zmq-port=28332 -a rx/juno -u m333 -p easypassword3 -b 0.0.0.0:3334
+```
+
+### Run Miners
+
+Connect miners to the proxy (no RPC credentials needed):
 ```bash
 ./xmrig -o PROXY_IP:3334 -u worker1 -a rx/juno
 ```
 
+Each miner can use any username - it's just for identification in proxy logs.
+
+---
+
+## Quick Reference
+
+### Direct Mining Command
+```bash
+./xmrig -o NODE:8232 --daemon --daemon-zmq-port=28332 -a rx/juno -u USER -p PASS
+```
+
+### Proxy Command
+```bash
+./xmrig-proxy -o NODE:8232 --daemon --daemon-zmq-port=28332 -a rx/juno -u USER -p PASS -b 0.0.0.0:3334
+```
+
+### Miner to Proxy Command
+```bash
+./xmrig -o PROXY:3334 -u workername -a rx/juno
+```
+
+---
+
 ## Notes
 
-- Block rewards go to `mineraddress` configured on the Juno node
-- `-u`/`-p` on the proxy are RPC credentials, not wallet addresses
-- xmrig-proxy supports up to 256 miners per job (nicehash mode)
+- Block rewards go to the `mineraddress` configured in the Juno node
 - ZMQ provides instant block notifications; without it, polling occurs every 1000ms
-
-## Optional: RPC Proxy
-
-For additional credential isolation on distributed setups, see [juno-proxy](https://github.com/user/juno-proxy).
+- The proxy supports up to 256 miners per job (nicehash mode)
+- `-u`/`-p` on the proxy and direct mining are RPC credentials, not wallet addresses
+- Miners connecting to the proxy use `-u` for worker identification only
