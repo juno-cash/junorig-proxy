@@ -18,6 +18,7 @@
 
 #include "core/config/Config.h"
 #include "3rdparty/rapidjson/document.h"
+#include "base/crypto/Algorithm.h"
 #include "base/io/log/Log.h"
 #include "base/kernel/interfaces/IJsonReader.h"
 #include "base/net/dns/Dns.h"
@@ -72,6 +73,15 @@ bool xmrig::Config::read(const IJsonReader &reader, const char *fileName)
 
     setCustomDiff(reader.getUint64("custom-diff", m_diff));
     setMode(reader.getString("mode"));
+
+    // Force simple mode for RX_JUNO - nicehash mode limits nonce to 3 bytes
+    // but RX_JUNO needs full 4-byte counter. Pool's extranonce handles differentiation.
+    if (m_mode == NICEHASH_MODE && !m_pools.data().empty() &&
+        m_pools.data()[0].algorithm() == Algorithm::RX_JUNO) {
+        m_mode = SIMPLE_MODE;
+        LOG_INFO("RX_JUNO detected - using simple mode (nicehash not supported)");
+    }
+
     setWorkersMode(reader.getValue("workers"));
 
     const rapidjson::Value &bind = reader.getArray("bind");

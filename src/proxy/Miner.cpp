@@ -500,7 +500,10 @@ void xmrig::Miner::sendJob(const char *blob, const char *jobId, const char *targ
             extensions.PushBack("algo", allocator);
         }
 
-        if (hasExtension(EXT_NICEHASH)) {
+        // Don't advertise nicehash for RX_JUNO - the miner's nicehash mode limits
+        // nonce to 3 bytes, but RX_JUNO needs full 4-byte counter variation.
+        // The pool's extranonce already handles session differentiation.
+        if (hasExtension(EXT_NICEHASH) && strcmp(algo, "rx/juno") != 0) {
             extensions.PushBack("nicehash", allocator);
         }
 
