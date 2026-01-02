@@ -2,7 +2,7 @@
 
 This guide covers two solo mining setups:
 - **Direct Mining**: Single miner connects directly to the Juno node
-- **Proxy Mining**: Multiple miners connect through xmrig-proxy to a single Juno node
+- **Proxy Mining**: Multiple miners connect through junorig-proxy to a single Juno node
 
 ## Juno Node Setup
 
@@ -34,16 +34,16 @@ junocashd
 ## Option A: Direct Mining (Single Miner)
 
 ```
-[Juno Node:8232] <--RPC/ZMQ--> [juno-xmrig]
+[Juno Node:8232] <--RPC/ZMQ--> [junorig]
 ```
 
 Best for: Single mining machine connecting directly to your node.
 
-### Build juno-xmrig
+### Build junorig
 
 ```bash
-git clone https://github.com/user/juno-xmrig
-cd juno-xmrig
+git clone https://github.com/juno-cash/junorig
+cd junorig
 mkdir build && cd build
 cmake ..
 make -j$(nproc)
@@ -53,17 +53,17 @@ make -j$(nproc)
 
 With ZMQ (recommended - instant block notifications):
 ```bash
-./xmrig -o NODE_IP:8232 --daemon --daemon-zmq-port=28332 -a rx/juno -u RPC_USER -p RPC_PASSWORD
+./junorig -o NODE_IP:8232 --daemon --daemon-zmq-port=28332 -a rx/juno -u RPC_USER -p RPC_PASSWORD
 ```
 
 Without ZMQ (polls every 1000ms):
 ```bash
-./xmrig -o NODE_IP:8232 --daemon -a rx/juno -u RPC_USER -p RPC_PASSWORD
+./junorig -o NODE_IP:8232 --daemon -a rx/juno -u RPC_USER -p RPC_PASSWORD
 ```
 
 Example:
 ```bash
-./xmrig -o 192.168.0.10:8232 --daemon --daemon-zmq-port=28332 -a rx/juno -u m333 -p easypassword3
+./junorig -o 192.168.0.10:8232 --daemon --daemon-zmq-port=28332 -a rx/juno -u m333 -p easypassword3
 ```
 
 ---
@@ -71,26 +71,26 @@ Example:
 ## Option B: Proxy Mining (Multiple Miners)
 
 ```
-[Juno Node:8232] <--RPC/ZMQ--> [juno-xmrig-proxy:3334] <--stratum--> [miners...]
+[Juno Node:8232] <--RPC/ZMQ--> [junorig-proxy:3334] <--stratum--> [miners...]
 ```
 
 Best for: Mining farms, multiple machines, or when you want to hide RPC credentials from miners.
 
-### Build juno-xmrig-proxy
+### Build junorig-proxy
 
 ```bash
-git clone https://github.com/user/juno-xmrig-proxy
-cd juno-xmrig-proxy
+git clone https://github.com/juno-cash/junorig-proxy
+cd junorig-proxy
 mkdir build && cd build
 cmake .. -DWITH_TLS=ON
 make -j$(nproc)
 ```
 
-### Build juno-xmrig (for miners)
+### Build junorig (for miners)
 
 ```bash
-git clone https://github.com/user/juno-xmrig
-cd juno-xmrig
+git clone https://github.com/juno-cash/junorig
+cd junorig
 mkdir build && cd build
 cmake ..
 make -j$(nproc)
@@ -100,24 +100,24 @@ make -j$(nproc)
 
 With ZMQ (recommended):
 ```bash
-./xmrig-proxy -o NODE_IP:8232 --daemon --daemon-zmq-port=28332 -a rx/juno -u RPC_USER -p RPC_PASSWORD -b 0.0.0.0:3334
+./junorig-proxy -o NODE_IP:8232 --daemon --daemon-zmq-port=28332 -a rx/juno -u RPC_USER -p RPC_PASSWORD -b 0.0.0.0:3334
 ```
 
 Without ZMQ:
 ```bash
-./xmrig-proxy -o NODE_IP:8232 --daemon -a rx/juno -u RPC_USER -p RPC_PASSWORD -b 0.0.0.0:3334
+./junorig-proxy -o NODE_IP:8232 --daemon -a rx/juno -u RPC_USER -p RPC_PASSWORD -b 0.0.0.0:3334
 ```
 
 Example:
 ```bash
-./xmrig-proxy -o 192.168.0.10:8232 --daemon --daemon-zmq-port=28332 -a rx/juno -u m333 -p easypassword3 -b 0.0.0.0:3334
+./junorig-proxy -o 192.168.0.10:8232 --daemon --daemon-zmq-port=28332 -a rx/juno -u m333 -p easypassword3 -b 0.0.0.0:3334
 ```
 
 ### Run Miners
 
 Connect miners to the proxy (no RPC credentials needed):
 ```bash
-./xmrig -o PROXY_IP:3334 -u worker1 -a rx/juno
+./junorig -o PROXY_IP:3334 -u worker1 -a rx/juno
 ```
 
 Each miner can use any username - it's just for identification in proxy logs.
@@ -128,17 +128,17 @@ Each miner can use any username - it's just for identification in proxy logs.
 
 ### Direct Mining Command
 ```bash
-./xmrig -o NODE:8232 --daemon --daemon-zmq-port=28332 -a rx/juno -u USER -p PASS
+./junorig -o NODE:8232 --daemon --daemon-zmq-port=28332 -a rx/juno -u USER -p PASS
 ```
 
 ### Proxy Command
 ```bash
-./xmrig-proxy -o NODE:8232 --daemon --daemon-zmq-port=28332 -a rx/juno -u USER -p PASS -b 0.0.0.0:3334
+./junorig-proxy -o NODE:8232 --daemon --daemon-zmq-port=28332 -a rx/juno -u USER -p PASS -b 0.0.0.0:3334
 ```
 
 ### Miner to Proxy Command
 ```bash
-./xmrig -o PROXY:3334 -u workername -a rx/juno
+./junorig -o PROXY:3334 -u workername -a rx/juno
 ```
 
 ---

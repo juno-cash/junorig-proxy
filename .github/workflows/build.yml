@@ -34,14 +34,14 @@ jobs:
       - name: Prepare artifacts
         run: |
           mkdir -p artifacts
-          cp build/xmrig-proxy artifacts/
+          cp build/junorig-proxy artifacts/
           cp src/config.json artifacts/
-          strip artifacts/xmrig-proxy
+          strip artifacts/junorig-proxy
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: xmrig-proxy-linux-x64
+          name: junorig-proxy-linux-x64
           path: artifacts/
 
   build-windows:
@@ -88,14 +88,14 @@ jobs:
         shell: msys2 {0}
         run: |
           mkdir -p artifacts
-          cp build/xmrig-proxy.exe artifacts/
+          cp build/junorig-proxy.exe artifacts/
           cp src/config.json artifacts/
-          strip artifacts/xmrig-proxy.exe
+          strip artifacts/junorig-proxy.exe
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: xmrig-proxy-windows-${{ matrix.arch }}
+          name: junorig-proxy-windows-${{ matrix.arch }}
           path: artifacts/
 
   build-macos:
@@ -123,14 +123,14 @@ jobs:
       - name: Prepare artifacts
         run: |
           mkdir -p artifacts
-          cp build/xmrig-proxy artifacts/
+          cp build/junorig-proxy artifacts/
           cp src/config.json artifacts/
-          strip artifacts/xmrig-proxy
+          strip artifacts/junorig-proxy
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: xmrig-proxy-macos-arm64
+          name: junorig-proxy-macos-arm64
           path: artifacts/
 
   release:

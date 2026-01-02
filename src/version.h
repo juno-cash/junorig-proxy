@@ -19,9 +19,9 @@
 #ifndef XMRIG_VERSION_H
 #define XMRIG_VERSION_H
 
-#define APP_ID        "juno-xmrig-proxy"
-#define APP_NAME      "juno-xmrig-proxy"
-#define APP_DESC      "Juno XMRig Stratum proxy"
+#define APP_ID        "junorig-proxy"
+#define APP_NAME      "JunoRig-proxy"
+#define APP_DESC      "JunoRig stratum proxy"
 #define APP_VERSION   "6.24.0-juno.5"
 #define APP_DOMAIN    "juno.cash"
 #define APP_SITE      "www.juno.cash"

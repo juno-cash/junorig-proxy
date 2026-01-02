@@ -1,4 +1,4 @@
-# Juno XMRig Proxy
+# JunoRig Proxy
 
 This is an extremely high-performance proxy for the CryptoNote stratum protocol (including Monero and others).
 It can efficiently manage over 100K connections on an inexpensive, low-memory virtual machine (with just 1024 MB of RAM).
@@ -23,13 +23,13 @@ This fork adds support for Juno Cash mining using the rx/juno algorithm.
 Connect to a Juno mining pool:
 
 ```bash
-./xmrig-proxy -o pool.example.com:3333 -u YOUR_WALLET_ADDRESS -p x -a rx/juno -b 0.0.0.0:3334 -m simple
+./junorig-proxy -o pool.example.com:3333 -u YOUR_WALLET_ADDRESS -p x -a rx/juno -b 0.0.0.0:3334 -m simple
 ```
 
-Then point your [juno-xmrig](https://github.com/user/juno-xmrig) miners at the proxy:
+Then point your [junorig](https://github.com/juno-cash/junorig) miners at the proxy:
 
 ```bash
-./xmrig -o 127.0.0.1:3334 -u x -p x -a rx/juno -m simple
+./junorig -o 127.0.0.1:3334 -u x -p x -a rx/juno -m simple
 ```
 
 ### Solo/Daemon Mining
@@ -39,7 +39,7 @@ See the dedicated document in [doc/SOLO_MINING.md](doc/SOLO_MINING.md).
 For solo mining, the proxy connects directly to a Juno node's RPC interface:
 
 ```bash
-./xmrig-proxy -o 127.0.0.1:8232 --daemon -a rx/juno -u rpcuser -p rpcpass -b 0.0.0.0:3334 -m simple
+./junorig-proxy -o 127.0.0.1:8232 --daemon -a rx/juno -u rpcuser -p rpcpass -b 0.0.0.0:3334 -m simple
 ```
 
 **Important:** In daemon mode, `-u` and `-p` are RPC authentication credentials, not wallet addresses. The mining reward address is configured on the Juno daemon itself (via `-mineraddress` or config file).
@@ -57,7 +57,7 @@ Optional: Enable ZMQ for faster block notifications:
 junocashd -zmqpubhashblock=tcp://0.0.0.0:28332 ...
 
 # On the proxy
-./xmrig-proxy -o 127.0.0.1:8232 --daemon --daemon-zmq-port=28332 -a rx/juno -b 0.0.0.0:3334
+./junorig-proxy -o 127.0.0.1:8232 --daemon --daemon-zmq-port=28332 -a rx/juno -b 0.0.0.0:3334
 ```
 
 ### Proxy Modes
