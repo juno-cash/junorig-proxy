@@ -178,7 +178,7 @@ void xmrig::Config::setCustomDiff(uint64_t diff)
 void xmrig::Config::setMode(const char *mode)
 {
     if (mode == nullptr) {
-        m_mode = NICEHASH_MODE;
+        m_mode = SIMPLE_MODE;
         return;
     }
 

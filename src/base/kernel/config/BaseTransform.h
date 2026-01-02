@@ -91,7 +91,7 @@ protected:
     }
 
 protected:
-    Algorithm m_algorithm;
+    Algorithm m_algorithm{Algorithm::RX_JUNO};
     Coin m_coin;
 
 
