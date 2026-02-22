@@ -12,7 +12,7 @@ Compatible with any pool and any miner that supports NiceHash.
 This proxy is designed to handle donation traffic from XMRig. No other solution works well with high connection and disconnection rates.
 
 ## Usage
-:boom: If you are using Linux and need to manage over **1000 connections**, you must [increase the limits on open files](https://github.com/xmrig/xmrig-proxy/wiki/Ubuntu-setup).
+:boom: If you are using Linux and need to manage over **1000 connections**, you must increase the limits on open files (e.g. `ulimit -n 65535`).
 
 ## Juno Cash (rx/juno) Support
 
